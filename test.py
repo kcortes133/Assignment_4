@@ -5,7 +5,7 @@
 #   get statistical significance
 
 import argparse, logging, random, time
-import networkCreation, fileParsing, statistics, geneScoring, networkVisualization, geneticAlgorithm
+import networkCreation, fileParsing, geneScoring, geneticAlgorithm
 
 # arguments:
 #   - input file
@@ -52,30 +52,8 @@ def main():
     geneAvg = geneScoring.getGeneScoreAvg(geneScores)
     networkSorted = sorted(geneAvg, key=lambda k: geneAvg[k], reverse=True)
 
-    geneticAlgorithm.mutation(lociSubN, lociLists)
-
-    # get top numGenes from each loci
-    # make network with genes
-    if  visualize:
-        if not args.topGenes:
-            genes = geneScoring.getTopLociGenes(geneAvg, lociLists, args.numGenes)
-            visualNetwork = networkVisualization.makeCrossLociNetwork(genes, network, lociLists)
-
-        # get top numGenes regardless of loci
-        # make network with genes
-        if args.topGenes:
-            genes = networkSorted[:args.numGenes]
-            visualNetwork = networkVisualization.makeCrossLociNetwork(genes, network, lociLists)
-
-        # write to output file the genes loci and gene score of genes in the network
-        networkVisualization.outputGeneScores(geneAvg, genes, args.geneOutFile, lociLists)
-        # make graph with specified genes
-        # 1. gene score - size of node
-        # 2. loci of gene - color of node
-        # 3. weight of edge - darkness of edge
-        # make network between loci genes no edges between genes in same loci
-        graph = networkVisualization.makeGraph(visualNetwork, lociLists, geneAvg)
-        networkVisualization.visualizeGraph(graph, args.topGenes)
+    #newPop = geneticAlgorithm.mutation(lociSubN, lociLists, network)
+    newPop = geneticAlgorithm.geneticAlg(lociSubN, lociLists, network)
 
     if args.calcPVal:
         numBins = args.numBins
@@ -94,6 +72,7 @@ def main():
             coFPopDensities.append(popD/5000)
 
         # calculate the avg of each population -> makeCoFSubnetorks is one population?
+        ''
         # calculate the pvalue
         # probability edges using cof distribution is greater than avg of loci edged divided by # of random networks
         pval = statistics.empiricalPVal(lociSubN, coFSubnetworks)
