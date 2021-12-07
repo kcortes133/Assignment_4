@@ -18,12 +18,26 @@ def calcEdgeDensity(network):
         density += len(network[node])
     density = density/2
 
-
     return density
 
 
-# @param densities
-# @displays histogram of densities
+# edge density using edge weights instead of number of edges
+# bool avgDensity if want avg num of edges/node -> good if networks have diff num of nodes
+#   default set to false
+# @param network: network dictionary with gene nodes and interactions edges
+# @returns density: total edge density in network
+def calcEdgeDensityW(network):
+    density =0
+
+    for node in network:
+        for edge in network[node]:
+            density += float(network[node][edge])
+    density = density/2
+    return density
+
+
+# @param: densities
+# @displays: histogram of densities
 def histogram(densities):
     # Plot Histogram on x
     plt.hist(densities)
@@ -34,7 +48,7 @@ def histogram(densities):
 
 # @param dens1: list of density distribution
 # @param dens2: list of different density distribution
-# @displays histogram of the two densities
+# @displays: histogram of the two densities
 def overlappingHistogram(dens1, dens2):
 
     # Plot Histogram on x
@@ -56,19 +70,17 @@ def empiricalPVal(lociSubN, coFPopDensities):
     lociDensity = 0
     for subNet in lociSubN:
         # calculate the edge density
-        tempLD = calcEdgeDensity(subNet)
+        tempLD = calcEdgeDensityW(subNet)
         lociDensity += tempLD
     lociDensity = lociDensity/len(lociSubN)
 
-    # get network densities for all coF subnetworks
-    #coFDensities = []
-    #for coF in coFSubN:
-    #    coFDensities.append(calcEdgeDensity(coF))
+    print(lociDensity)
 
     # calculate p-val by using cof (null analysis) density distribution
     # and avg loci density
     coFDensities = sorted(coFPopDensities)
     pos = 0
+    p=0
     densPos = 0
     for c in coFDensities:
         if c <=lociDensity:

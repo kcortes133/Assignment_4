@@ -28,7 +28,7 @@ parser.add_argument('--networkOutFile', type=str, default='geneNetwork.txt', hel
 parser.add_argument('--calcPVal', type=bool, default=False, help='the number of bins to separate edge densities into')
 parser.add_argument('--numBins', type=int, default=128, help='the number of bins to separate edge densities into')
 parser.add_argument('--numSubnetworks', type=int, default=5000, help='the number of subnetworks to make')
-parser.add_argument('--topGenes', type=bool, default=False, help='graph only top n genes regarless of loci')
+parser.add_argument('--topGenes', type=bool, default=False, help='graph only top n genes regardless of loci')
 parser.add_argument('--numGenes', type=int, default=3, help='number of genes from each loci or total genes'
                                                                  ' if topGenes is true')
 
@@ -52,11 +52,13 @@ def main():
     geneAvg = geneScoring.getGeneScoreAvg(geneScores)
     networkSorted = sorted(geneAvg, key=lambda k: geneAvg[k], reverse=True)
 
-    geneticAlgorithm.mutation(lociSubN, lociLists)
+    newPop = geneticAlgorithm.geneticAlg(lociSubN, lociLists, network)
+
+    print(time.time() - start)
 
     # get top numGenes from each loci
     # make network with genes
-    if  visualize:
+    if visualize:
         if not args.topGenes:
             genes = geneScoring.getTopLociGenes(geneAvg, lociLists, args.numGenes)
             visualNetwork = networkVisualization.makeCrossLociNetwork(genes, network, lociLists)
@@ -84,31 +86,32 @@ def main():
         fNetworkBins = networkCreation.makeFixedBins(interactions, numBins)
         # make coFunctional random subnetworks
         # need 1000 populations where populations are the 5000 networks
-        # do 1000 or 5000 times
         coFPopDensities = []
-        for i in range(5000):
-            coFSubnetworks = networkCreation.makeCoFSubnetworks(interactions, qNetworkBins, lociSubN)
+        for i in range(1000):
+            coFSubnetworks = networkCreation.makeCoFSubnetworks(interactions, qNetworkBins, newPop)
             popD = 0
             for subCoF in coFSubnetworks:
-                popD += statistics.calcEdgeDensity(subCoF)
-            coFPopDensities.append(popD/5000)
+                popD += statistics.calcEdgeDensityW(subCoF)
+            coFPopDensities.append(popD/len(coFSubnetworks))
 
         # calculate the avg of each population -> makeCoFSubnetorks is one population?
         # calculate the pvalue
         # probability edges using cof distribution is greater than avg of loci edged divided by # of random networks
-        pval = statistics.empiricalPVal(lociSubN, coFSubnetworks)
+
+        pval = statistics.empiricalPVal(newPop, coFPopDensities)
 
         # make a graph showing the edge density distributions
         coFDensities = []
         for network in coFSubnetworks:
-            coFDensities.append(statistics.calcEdgeDensity(network))
+            coFDensities.append(statistics.calcEdgeDensityW(network))
 
         lociDensities = []
         for network in lociSubN:
-            lociDensities.append(statistics.calcEdgeDensity(network))
+            lociDensities.append(statistics.calcEdgeDensityW(network))
 
         statistics.overlappingHistogram(coFPopDensities, lociDensities)
 
-        #print('P-val : ', pval)
+        print('P-val : ', pval)
+    print(time.time() - start)
 
 main()

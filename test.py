@@ -5,7 +5,7 @@
 #   get statistical significance
 
 import argparse, logging, random, time
-import networkCreation, fileParsing, geneScoring, geneticAlgorithm
+import networkCreation, fileParsing, geneScoring, geneticAlgorithm, statistics
 
 # arguments:
 #   - input file
@@ -52,7 +52,6 @@ def main():
     geneAvg = geneScoring.getGeneScoreAvg(geneScores)
     networkSorted = sorted(geneAvg, key=lambda k: geneAvg[k], reverse=True)
 
-    #newPop = geneticAlgorithm.mutation(lociSubN, lociLists, network)
     newPop = geneticAlgorithm.geneticAlg(lociSubN, lociLists, network)
 
     if args.calcPVal:
@@ -72,7 +71,6 @@ def main():
             coFPopDensities.append(popD/5000)
 
         # calculate the avg of each population -> makeCoFSubnetorks is one population?
-        ''
         # calculate the pvalue
         # probability edges using cof distribution is greater than avg of loci edged divided by # of random networks
         pval = statistics.empiricalPVal(lociSubN, coFSubnetworks)

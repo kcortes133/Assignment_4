@@ -4,39 +4,40 @@
 #   create a sub network of the gene interactions from the input file using the STRING file
 #   get statistical significance
 
-# //TODO
 # START
 # Generate the initial population
-# Compute fitness
-# REPEAT
+# Calculate fitness
+# WHILE
+#    Mutate
 #    Selection
-#    Crossover
-#    Mutation
+#    Mate
 #    Compute fitness
-# UNTIL population has converged
+# UNTIL population does not have significant change in density
 # STOP
+
 import random, statistics
 
-
+# @param network:
+# @param connections:
+# @returns network:
 def makeEdges(network, connections):
-    b = len(network)
     for gene in network:
         for gene2 in connections[gene]:
             if gene2 in network:
                 weight = connections[gene][gene2]
                 network[gene] = {gene2:weight}
-    e = len(network)
-    if b != e:
-        print('i hate me')
     return network
 
+
+# @param subnetworks:
+# @param lociLists:
+# @param connections:
+# @returns newPop:
 def mutation(subnetworks, lociLists, connections):
     newPop = []
     [newPop.append(dict.fromkeys(subnetworks[x], {})) for x in range(len(subnetworks))]
 
     for network in range(len(subnetworks)):
-        b = len(subnetworks[network])
-        temp = subnetworks[network]
         for gene in subnetworks[network]:
             # mutation at 5% chance
             subnetworks[network][gene] = {}
@@ -51,31 +52,29 @@ def mutation(subnetworks, lociLists, connections):
                         # replace gene with mutatedG
                         newPop[network][mutatedG] = {}
                         newPop[network].pop(gene)
-                        e = len(newPop[network])
-                        if b != e:
-                            print(gene)
-                            print(mutatedG)
 
         newPop[network] = makeEdges(newPop[network], connections)
-        e = len(newPop[network])
-        if len(newPop[network]) < 12:
-            print(newPop[network])
-        if b != e:
-            print('fuck this')
-            print(temp)
-            print(newPop[network])
 
     return newPop
 
 
+# @param subnetworks:
+# @returns scores:
+# //TODO cubing it will make score smaller
+# needs to be a whole number
+# dont want to cube the edge density b/c
 def calculateSelectionScores(subnetworks):
     scores = []
     for network in subnetworks:
-        edgeDensity = statistics.calcEdgeDensity(network)
-        scores.append(edgeDensity**3)
+        edgeDensity = statistics.calcEdgeDensityW(network)
+        scores.append(edgeDensity*10)
     return scores
 
 
+# @param subnetworks:
+# @param lociLists:
+# @param connections:
+# @returns subnetworks:
 def mating(subnetworks, lociLists, connections):
     origSNetworks = subnetworks
     selScores = calculateSelectionScores(subnetworks)
@@ -86,6 +85,8 @@ def mating(subnetworks, lociLists, connections):
             selList.append(networkIndex)
         networkIndex +=1
 
+    # //TODO
+    # make sure not mating two of the same networks
     for network in subnetworks:
         mateIndex = random.choice(selList)
         # get corresponding network to mate with network
@@ -106,13 +107,20 @@ def mating(subnetworks, lociLists, connections):
     return subnetworks
 
 
+# @param population:
+# @returns eDensity:
 def calcPopEdgeDensity(population):
     eDensity = 0
     for network in population:
-        eDensity += statistics.calcEdgeDensity(network)
+        #eDensity += statistics.calcEdgeDensity(network)
+        eDensity += statistics.calcEdgeDensityW(network)
     return eDensity
 
 
+# @param subnetworks:
+# @param lociLists:
+# @param connections:
+# @returns newPop:
 def geneticAlg(subnetworks, lociLists, connections):
     change = 100
     generations = 0
@@ -125,5 +133,7 @@ def geneticAlg(subnetworks, lociLists, connections):
 
         change = abs((endEDensity - startingEDensity)/startingEDensity)
         subnetworks = newPop
-        generations+=1
+        generations += 1
         print(generations)
+
+    return newPop

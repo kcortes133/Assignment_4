@@ -34,8 +34,11 @@ def getGeneScores(lociSubNs, lociL, interactions):
                 # check if there are edges with other genes in subnetwork
                 for diffGene in subN:
                     # make sure not checking for edge with the gene from same loci
+                    # //TODO
+                    # gene score based on edge weights instead of number
                     if diffGene != lociGene and diffGene in interactions[gene]:
-                        geneS += 1
+                        #geneS += 1
+                        geneS = float(interactions[gene][diffGene])
 
                 if gene in geneScores:
                     geneScores[gene].append(geneS)
