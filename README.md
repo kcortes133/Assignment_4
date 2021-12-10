@@ -1,4 +1,4 @@
-# Gene Score and Prix Fixe Subnetwork Visualization
+# Genetic Algorithm  
 
 ## Goal
 Uses a genetic algorithm to create densely connected subnetworks of genes.
