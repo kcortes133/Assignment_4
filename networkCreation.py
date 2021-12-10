@@ -15,7 +15,7 @@ def makeLociSubnetworks(numNetworks, fullNetwork, lociLists):
     return subNetworks
 
 
-# @param fullNetwork: gene:gene intearctions dictionary
+# @param fullNetwork: gene:gene interactions dictionary
 # @param lociLists: list of lists where each sublist is the genes at one loci
 # @returns subNetwork: dictionary subnetwork of loci network with one random gene from each loci
 def createSubnetwork(fullNetwork, lociLists):
@@ -39,7 +39,7 @@ def createSubnetwork(fullNetwork, lociLists):
 
 
 # limitations: once you get higher the bins get more empty
-# @param fullNetwork: gene:gene intearctions dictionary
+# @param fullNetwork: gene:gene interactions dictionary
 # @param numBins: number of bins to separate the bins into by edge density
 # @return numBins: nodes from fullNetwork organized into bins
 def makeFixedBins(fullNetwork, numBins):
@@ -66,7 +66,7 @@ def makeFixedBins(fullNetwork, numBins):
     return fullNetworkBins
 
 
-# @param fullNetwork: gene:gene intearctions dictionary
+# @param fullNetwork: gene:gene interactions dictionary
 # @param numBins: number of bins to separate the bins into by edge density
 # @return numBins: nodes from fullNetwork organized into bins
 def makeQuantileBins(fullNetwork, numBins):
@@ -81,7 +81,7 @@ def makeQuantileBins(fullNetwork, numBins):
     binSize = round(numNodes/numBins)
 
     # make each bin the same size
-    # nodes in bins according to numbder of edges
+    # nodes in bins according to number of edges
     for i in range(numBins):
         binStart = i*binSize
         binEnd = (i+1)*binSize
@@ -104,7 +104,7 @@ def makeCoFSubnetworks(fullNetwork, fullNetworkBins, lociSubN,):
     # if bin is empty go to the closest... look above and below
 
     coFSubnetworks = []
-    lociD = []
+    #lociD = []
     coFD = []
 
     for subNetwork in lociSubN:
@@ -115,7 +115,7 @@ def makeCoFSubnetworks(fullNetwork, fullNetworkBins, lociSubN,):
                 nodeDensity = len(fullNetwork[node])
             else:
                 nodeDensity = 0
-            lociD.append(nodeDensity)
+            #lociD.append(nodeDensity)
 
             # loop through bin
             # first bin that smaller than last element pick from that bin

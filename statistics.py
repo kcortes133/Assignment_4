@@ -88,7 +88,7 @@ def empiricalPVal(lociSubN, coFPopDensities):
             densPos = c
         pos +=1
 
-    pval = p/len(coFDensities)
+    pval = (len(coFDensities) - p)/len(coFDensities)
 
     # plot a histogram of cof density distribution and avd loci density
     # put pval next to avg loci dashed line

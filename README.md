@@ -1,8 +1,7 @@
 # Gene Score and Prix Fixe Subnetwork Visualization
 
 ## Goal
-Calculate gene scores for each gene to determine strength of relationships between other loci genes
-and then visualize the top genes with corresponding edges, loci, gene score.
+Uses a genetic algorithm to create densely connected subnetworks of genes.
 
 ## Description
 Input is two tab-delimited files named 'Input.gmt' and 'STRING.txt'. Input.gmt is a 
@@ -35,96 +34,104 @@ are the output to a specified file.
 ## Usage
 #### Python Usage
 ```python
-import networkCreation, fileParsing, networkVisualization, geneScoring
+import argparse, random, time
+import networkCreation, fileParsing, statistics, geneScoring, networkVisualization, geneticAlgorithm, outputFiles
 
-inputF = 'input.gmt.txt'
-stringF = 'STRING.txt'
-
-topOverallGenes = False
+start = time.time()
+random.seed(5)
+visualize = True
+genesFile = 'Input.gmt.txt'
+interactionsFile = 'STRING.txt'
+numSubnetworks = 5000
+topGenes = False
+numGenes = 5
+calcPVal = True
+numBins = 132
 
 # read in networks
-lociLists = fileParsing.readInput(inputF)
-interactions = fileParsing.makeInteractionNetwork(stringF)
+lociLists = fileParsing.readInput(genesFile)
+interactions = fileParsing.makeInteractionNetwork(interactionsFile)
 network = fileParsing.makeNetwork(lociLists, interactions)
 
 # make loci subnetworks
-# make loci subnetworks
-lociSubN = networkCreation.makeLociSubnetworks(5000, network, lociLists)
+lociSubN = networkCreation.makeLociSubnetworks(numSubnetworks, network, lociLists)
 
 # calculate gene scores and sort genes by score
 geneScores = geneScoring.getGeneScores(lociSubN, lociLists, network)
 geneAvg = geneScoring.getGeneScoreAvg(geneScores)
 networkSorted = sorted(geneAvg, key=lambda k: geneAvg[k], reverse=True)
 
+newPop = geneticAlgorithm.geneticAlg(lociSubN, lociLists, network)
+
+
+print(time.time() - start)
+
 # get top numGenes from each loci
 # make network with genes
-if not topOverallGenes:
-    genes = geneScoring.getTopLociGenes(geneAvg, lociLists, 3)
-    visualNetwork = networkVisualization.makeCrossLociNetwork(genes, network, lociLists)
+if visualize:
+    if not topGenes:
+        genes = geneScoring.getTopLociGenes(geneAvg, lociLists, numGenes)
+        visualNetwork = networkVisualization.makeCrossLociNetwork(genes, network, lociLists)
 
-# get top numGenes regardless of loci
-# make network with genes
-if topOverallGenes:
-    genes = networkSorted[:10]
-    visualNetwork = networkVisualization.makeCrossLociNetwork(genes, network, lociLists)
+    # get top numGenes regardless of loci
+    # make network with genes
+    if topGenes:
+        genes = networkSorted[:numGenes]
+        visualNetwork = networkVisualization.makeCrossLociNetwork(genes, network, lociLists)
 
-# write to output file the genes loci and gene score of genes in the network
-networkVisualization.outputGeneScores(geneAvg, genes, 'topGeneScores.txt', lociLists)
-# make graph with specified genes
-# 1. gene score - size of node
-# 2. loci of gene - color of node
-# 3. weight of edge - darkness of edge
-# make network between loci genes no edges between genes in same loci
-graph = networkVisualization.makeGraph(visualNetwork, lociLists, geneAvg)
-networkVisualization.visualizeGraph(graph, 3)
+    # make graph with specified genes
+    # 1. gene score - size of node
+    # 2. loci of gene - color of node
+    # 3. weight of edge - darkness of edge
+    # make network between loci genes no edges between genes in same loci
+    graph = networkVisualization.makeGraph(visualNetwork, lociLists, geneAvg)
+    networkVisualization.visualizeGraph(graph, topGenes)
+
+if calcPVal:
+    numBins = numBins
+    # make bins for coFunctional subnetwork creation
+    qNetworkBins = networkCreation.makeQuantileBins(interactions, numBins)
+    fNetworkBins = networkCreation.makeFixedBins(interactions, numBins)
+    # make coFunctional random subnetworks
+    # need 1000 populations where populations are the 5000 networks
+    coFPopDensities = []
+    for i in range(1000):
+        coFSubnetworks = networkCreation.makeCoFSubnetworks(interactions, qNetworkBins, newPop)
+        popD = 0
+
+        for subCoF in coFSubnetworks:
+            popD += statistics.calcEdgeDensityW(subCoF)
+        coFPopDensities.append(popD/len(coFSubnetworks))
+
+    # calculate the avg of each population -> makeCoFSubnetorks is one population?
+    # calculate the pvalue
+    # probability edges using cof distribution is greater than avg of loci edged divided by # of random networks
+
+    pval = statistics.empiricalPVal(newPop, coFPopDensities)
+
+    # make a graph showing the edge density distributions
+    coFDensities = []
+    for network in coFSubnetworks:
+        coFDensities.append(statistics.calcEdgeDensityW(network))
+
+    lociDensities = []
+    for network in newPop:
+        lociDensities.append(statistics.calcEdgeDensityW(network))
+
+    statistics.overlappingHistogram(lociDensities, coFPopDensities)
+
+    print('P-val : ', pval)
+print(time.time() - start)
+outputFiles.outputNetworks(2, newPop, 10)
+outputFiles.outputGeneScoresinLoci(geneAvg, lociLists)
 ```
 
 #### Command Line Usage
 ```commandline
 $ python main.py yourInputFile.gmt.txt
 
-$ python main.py input.gmt.txt --topGenes=True --numGenes=10
-
-$ python main.py input.gmt.txt --numGenes=3
+$ python main.py input.gmt.txt  --numSubnetworks=5000 --calcPVal=True
 ```
-#### Example of Top Genes From Each Loci and Gene Score
-|Gene | Loci | Gene Score|
-|-----|-----|------|
-|PLK1|	0|	0.495|
-|LGR4|	1|	0.299|
-|RAD51C|	2|	0.3502|
-|NCBP1|	3|	0.4428|
-|FANCA|	4|	0.101|
-|CDK18|	5|	0.5862|
-|IRAK2|	6|	0.3686|
-|MAPK14|	7|	0.7866|
-|DCLK1|	8|	0.3726|
-|ERCC4|	9|	0.4646|
-|CIB1|	10|	0.3766|
-|TRAP1|	11|	0.5038|
-
-#### Example of Top 10 Genes Regardless of Loci
-|Gene	|Loci	|Gene Score|
-|----|----|----|
-|MAPK14	|7	|0.7866|
-|MAPK13|	7	|0.7146|
-|STK38	|7	|0.5986|
-|CDK18|	5| 0.5862|
-|TRAP1|	11|	0.5038|
-|PLK1	|0|	0.495|
-|ERCC4|	9|	0.4646|
-|SMG1	|9|	0.4488|
-|NCBP1|	3|	0.4428|
-|CHP2	|0|	0.4108|
-
-
-#### Example of Top 3 Genes from Each Loci 
-![Network](https://user-images.githubusercontent.com/22487858/141220328-5c2013d1-fcfb-4cd9-bba6-6d5623d22dd0.png)
-
-
-#### Example Figure of Top 10 Gene Scores
-![top 10 gene](https://user-images.githubusercontent.com/22487858/141220318-d714e8c9-b0d9-4548-9cb5-5cd77363b3e3.png)
-
 
 ## Input
 1. Input.gmt
@@ -143,5 +150,12 @@ $ python main.py input.gmt.txt --numGenes=3
 - Colors correspond to gene loci
 - Edge darkness corresponds to edge weight from STRING database
 - Node size corresponds to gene score
-3. Tab Delimited File of genes, loci and corresponding gene scores
+2. Tab Delimited File of genes, loci and corresponding gene scores
 - gives the top genes from each loci or top genes regardless of loci
+3. Tab Delimited File of gene scores from each loci
+- gives all genes in all loci
+4. Top Ten Networks
+- tab delimited
+- pval specified in file name
+- genes and edges in network
+

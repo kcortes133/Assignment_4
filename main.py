@@ -4,8 +4,9 @@
 #   create a sub network of the gene interactions from the input file using the STRING file
 #   get statistical significance
 
-import argparse, logging, random, time
-import networkCreation, fileParsing, statistics, geneScoring, networkVisualization, geneticAlgorithm
+import argparse, random, time
+import networkCreation, fileParsing, statistics, geneScoring, \
+    networkVisualization, geneticAlgorithm, outputFiles
 
 # arguments:
 #   - input file
@@ -37,7 +38,7 @@ args = parser.parse_args()
 def main():
     start = time.time()
     random.seed(5)
-    visualize = False
+    visualize = True
 
     # read in networks
     lociLists = fileParsing.readInput(args.genesFile)
@@ -53,6 +54,7 @@ def main():
     networkSorted = sorted(geneAvg, key=lambda k: geneAvg[k], reverse=True)
 
     newPop = geneticAlgorithm.geneticAlg(lociSubN, lociLists, network)
+
 
     print(time.time() - start)
 
@@ -90,6 +92,7 @@ def main():
         for i in range(1000):
             coFSubnetworks = networkCreation.makeCoFSubnetworks(interactions, qNetworkBins, newPop)
             popD = 0
+
             for subCoF in coFSubnetworks:
                 popD += statistics.calcEdgeDensityW(subCoF)
             coFPopDensities.append(popD/len(coFSubnetworks))
@@ -106,12 +109,14 @@ def main():
             coFDensities.append(statistics.calcEdgeDensityW(network))
 
         lociDensities = []
-        for network in lociSubN:
+        for network in newPop:
             lociDensities.append(statistics.calcEdgeDensityW(network))
 
-        statistics.overlappingHistogram(coFPopDensities, lociDensities)
+        statistics.overlappingHistogram(lociDensities, coFPopDensities)
 
         print('P-val : ', pval)
     print(time.time() - start)
+    outputFiles.outputNetworks(2, newPop, 10)
+    outputFiles.outputGeneScoresinLoci(geneAvg, lociLists)
 
 main()
