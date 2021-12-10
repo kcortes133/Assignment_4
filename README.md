@@ -144,16 +144,16 @@ $ python main.py input.gmt.txt  --numSubnetworks=5000 --calcPVal=True
 ```
 
 ##### Example of possible edge densities 
-![](comparison.png)
+![comparison](https://user-images.githubusercontent.com/22487858/145517384-ba5bd435-6b42-4935-9274-a649f8f44588.png)
 
 ##### Example of possible p-val calculation
-![](empirical p val.png)
+![empirical p val](https://user-images.githubusercontent.com/22487858/145517413-698264a3-57c8-4b26-a633-aa703c5fdd8a.png)
 
 ##### Example of possible genetic algorithm generations
-![](generation statas.png)
+![generation statas](https://user-images.githubusercontent.com/22487858/145517441-724e971b-cd36-4e83-a29f-585ad8eeb941.png)
 
 ##### Example of possible gene score graph
-![](loci graph.png)
+![loci graph](https://user-images.githubusercontent.com/22487858/145517454-3066fc8f-67ee-466c-b06c-2b7b70df6d84.png)
 
 ## Input
 1. Input.gmt
