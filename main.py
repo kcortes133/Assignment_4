@@ -116,7 +116,7 @@ def main():
 
         print('P-val : ', pval)
     print(time.time() - start)
-    outputFiles.outputNetworks(2, newPop, 10)
+    outputFiles.outputNetworks(pval, newPop, 10)
     outputFiles.outputGeneScoresinLoci(geneAvg, lociLists)
 
 main()
