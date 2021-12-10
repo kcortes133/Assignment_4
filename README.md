@@ -33,8 +33,6 @@ corresponding to the weight of the edge. The corresponding gene names, loci, gen
 are the output to a specified file. 
 
 
-
-
 ## Install
 - scipy
 - matplotlib.pyplot
